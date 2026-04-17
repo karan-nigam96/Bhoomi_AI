@@ -1,0 +1,108 @@
+{% extends "base.html" %} {% block title %}BhoomiAI — Fertilizer Guide{%
+endblock %} {% block content %}
+<section class="page-wrap">
+  <div class="section-label">Soil Nutrition</div>
+  <h2 class="section-title">Fertilizer Guide for High Yield</h2>
+  <p class="section-sub">
+    ICAR-recommended fertilizers and doses for maximum productivity. Based on
+    NPK soil test recommendations.
+  </p>
+</section>
+
+<div id="fertilizers" class="container" style="padding-bottom:80px">
+  <div class="fert-section">
+    <div class="fert-grid">
+      <div class="fert-card">
+        <div class="fert-crop">🌾 Wheat</div>
+        <div class="fert-name">Urea + DAP + MOP</div>
+        <div class="fert-npk">
+          <span class="npk-badge n">N 120 kg/ha</span>
+          <span class="npk-badge p">P 60 kg/ha</span>
+          <span class="npk-badge k">K 40 kg/ha</span>
+        </div>
+        <p class="fert-note">
+          Split urea application: 50% basal + 50% at first irrigation (CRI
+          stage). DAP as basal dose.
+        </p>
+      </div>
+      <div class="fert-card">
+        <div class="fert-crop">🌾 Rice</div>
+        <div class="fert-name">Urea + SSP + MOP</div>
+        <div class="fert-npk">
+          <span class="npk-badge n">N 120 kg/ha</span>
+          <span class="npk-badge p">P 60 kg/ha</span>
+          <span class="npk-badge k">K 60 kg/ha</span>
+        </div>
+        <p class="fert-note">
+          Apply N in 3 splits: transplanting, tillering & panicle initiation.
+          Zinc sulphate 25 kg/ha for deficient soils.
+        </p>
+      </div>
+      <div class="fert-card">
+        <div class="fert-crop">🌽 Maize</div>
+        <div class="fert-name">Urea + DAP + Potash</div>
+        <div class="fert-npk">
+          <span class="npk-badge n">N 120 kg/ha</span>
+          <span class="npk-badge p">P 60 kg/ha</span>
+          <span class="npk-badge k">K 40 kg/ha</span>
+        </div>
+        <p class="fert-note">
+          Full P & K as basal. N in 3 splits: sowing, knee height, tasselling.
+          Add Zn @ 25 kg ZnSO₄/ha.
+        </p>
+      </div>
+      <div class="fert-card">
+        <div class="fert-crop">🎋 Sugarcane</div>
+        <div class="fert-name">Urea + SSP + SOP</div>
+        <div class="fert-npk">
+          <span class="npk-badge n">N 250 kg/ha</span>
+          <span class="npk-badge p">P 115 kg/ha</span>
+          <span class="npk-badge k">K 115 kg/ha</span>
+        </div>
+        <p class="fert-note">
+          Apply N in 4 splits over 12 months. Trash mulching retains soil
+          moisture and reduces weed pressure.
+        </p>
+      </div>
+      <div class="fert-card" style="border-left-color: var(--sun-bright)">
+        <div class="fert-crop">🌿 All Crops</div>
+        <div class="fert-name">Organic Amendments</div>
+        <div class="fert-npk">
+          <span class="npk-badge n" style="background: #d1fae5; color: #065f46"
+            >FYM</span
+          >
+          <span class="npk-badge p" style="background: #fef3c7; color: #92400e"
+            >Compost</span
+          >
+          <span class="npk-badge k" style="background: #ede9fe; color: #4c1d95"
+            >Biofert</span
+          >
+        </div>
+        <p class="fert-note">
+          FYM @ 10–15 t/ha improves soil organic carbon. Rhizobium + PSB
+          biofertilizers reduce chemical input by 20–25%.
+        </p>
+      </div>
+      <div class="fert-card" style="border-left-color: var(--sky)">
+        <div class="fert-crop">💧 Micronutrients</div>
+        <div class="fert-name">Zinc · Boron · Iron</div>
+        <div class="fert-npk">
+          <span class="npk-badge n" style="background: #cffafe; color: #164e63"
+            >ZnSO₄</span
+          >
+          <span class="npk-badge p" style="background: #fce7f3; color: #9d174d"
+            >Borax</span
+          >
+          <span class="npk-badge k" style="background: #fef9c3; color: #713f12"
+            >FeSO₄</span
+          >
+        </div>
+        <p class="fert-note">
+          Zinc deficiency prevalent in Indo-Gangetic plains. Apply ZnSO₄ @ 25
+          kg/ha once every 3 years as preventive.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %} {% block title %}BhoomiAI — Crop Guide{% endblock %}
+{% block content %}
+<section id="crops" class="page-wrap">
+  <div class="section-label">Crop Intelligence</div>
+  <h2 class="section-title">Know Your Crops</h2>
+  <p class="section-sub">
+    Detailed agroclimatic profiles sourced from ICAR Crop Production Guides and
+    Ministry of Agriculture & Farmers Welfare publications.
+  </p>
+
+  <div class="crops-grid">
+    {% for name, info in crops.items() %}
+    <div class="crop-info-card fade-in">
+      <div
+        class="crop-header"
+        style="background:linear-gradient(135deg,{{ info.color }},{{ info.color }}bb)"
+      >
+        <span class="crop-icon">{{ info.icon }}</span>
+        <h3>{{ name }}</h3>
+        <p>{{ info.scientific }}</p>
+      </div>
+      <div class="crop-body">
+        <div class="crop-stat-row">
+          <span class="k">Season</span><span class="v">{{ info.season }}</span>
+        </div>
+        <div class="crop-stat-row">
+          <span class="k">Temperature</span
+          ><span class="v">{{ info.temp }}</span>
+        </div>
+        <div class="crop-stat-row">
+          <span class="k">Annual Rainfall</span
+          ><span class="v">{{ info.rainfall }}</span>
+        </div>
+        <div class="crop-stat-row">
+          <span class="k">Best pH</span><span class="v">{{ info.ph }}</span>
+        </div>
+        <div class="crop-stat-row">
+          <span class="k">Soil Type</span><span class="v">{{ info.soil }}</span>
+        </div>
+        <div class="crop-stat-row">
+          <span class="k">NPK (kg/ha)</span
+          ><span class="v">{{ info.npk }}</span>
+        </div>
+        <div class="crop-stat-row">
+          <span class="k">Yield Potential</span
+          ><span class="v">{{ info.yield }}</span>
+        </div>
+        <div class="crop-seed-box">
+          <h5>🌱 High-Yield Varieties</h5>
+          <ul>
+            {% for v in info.varieties %}
+            <li>{{ v }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

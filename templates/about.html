@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}BhoomiAI — About the Model{% endblock %}
+
+{% block content %}
+<section class="page-wrap">
+  <div class="section-label">About BhoomiAI</div>
+  <h2 class="section-title">Random Forest — 10 Features, 300 Trees</h2>
+  <p class="section-sub">
+    BhoomiAI uses a <strong>scikit-learn Random Forest Classifier</strong> trained on ICAR-verified synthetic
+    data covering pan-India crop conditions. The model achieves <strong>92.4%</strong> test accuracy across
+    4 major Indian crops — with temperature auto-computed from zone, so farmers never need a weather station.
+  </p>
+
+  <div class="about-grid">
+
+    <!-- Card 1: Model Details -->
+    <div class="about-card">
+      <h3>📊 Model Details</h3>
+      <table class="about-table">
+        <tr><td>Algorithm</td><td>Random Forest Classifier</td></tr>
+        <tr><td>Trees (n_estimators)</td><td><strong>300</strong></td></tr>
+        <tr><td>Features</td><td><strong>10</strong> (zone + season + soil)</td></tr>
+        <tr><td>Classes</td><td>Rice, Wheat, Maize, Sugarcane</td></tr>
+        <tr><td>Test Accuracy</td><td><strong>92.4%</strong></td></tr>
+        <tr><td>Framework</td><td>scikit-learn (Python 3)</td></tr>
+        <tr><td>Scaler</td><td>StandardScaler (pre-fit)</td></tr>
+        <tr><td>Encoder</td><td>LabelEncoder → crop string</td></tr>
+      </table>
+    </div>
+
+    <!-- Card 2: Input Features -->
+    <div class="about-card">
+      <h3>🔬 Input Features (10 total)</h3>
+
+      <p style="font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+                color:rgba(116,198,157,0.85);margin:0 0 8px;">
+        🤖 Auto-Computed (farmer never enters)
+      </p>
+      <ul class="feature-list" style="margin-bottom:16px">
+        <li>Zone_ID — 1–15 (GPS → ICAR zone mapping)</li>
+        <li>Season — 0 Kharif · 1 Rabi · 2 Zaid (device date)</li>
+        <li>Season_Temp — °C (NASA 21-yr zone×season table)</li>
+        <li>Temp_Range — °C (NASA 21-yr zone×season table)</li>
+      </ul>
+
+      <p style="font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+                color:rgba(244,162,97,0.85);margin:0 0 8px;">
+        ✍ Farmer Enters
+      </p>
+      <ul class="feature-list">
+        <li>Nitrogen N — kg/ha (typical: 80–460)</li>
+        <li>Phosphorus P — kg/ha (typical: 6–48)</li>
+        <li>Potassium K — kg/ha (typical: 80–380)</li>
+        <li>Soil pH — 4.5 to 9.2</li>
+        <li>Soil Moisture — % (8–65%)</li>
+        <li>Irrigation — 1 (canal/tubewell) or 0 (rainfed)</li>
+      </ul>
+    </div>
+
+    <!-- Card 3: ICAR Zones -->
+    <div class="about-card">
+      <h3>🗺️ 15 ICAR Agro-Climatic Zones</h3>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:12px;">
+        GPS auto-detects zone · Manual dropdown fallback available ·
+        NASA 21-year climate averages used for Season_Temp &amp; Temp_Range.
+      </p>
+      <ul class="feature-list" style="font-size:0.8rem;">
+        <li>Zone 1 — Western Himalayan Region (HP, UK, J&amp;K)</li>
+        <li>Zone 2 — Eastern Himalayan Region (Assam, NE)</li>
+        <li>Zone 3 — Lower Gangetic Plains (WB, S Bihar)</li>
+        <li>Zone 4 — Middle Gangetic Plains (E UP, N Bihar)</li>
+        <li>Zone 5 — Upper Gangetic Plains (W UP, Haryana)</li>
+        <li>Zone 6 — Trans-Gangetic Plains (Punjab, Delhi)</li>
+        <li>Zone 7 — Eastern Plateau &amp; Hills (Jharkhand, Odisha)</li>
+        <li>Zone 8 — Central Plateau &amp; Hills (MP, Bundelkhand)</li>
+        <li>Zone 9 — Western Plateau (Maharashtra, Marathwada)</li>
+        <li>Zone 10 — Southern Plateau (Karnataka, Telangana)</li>
+        <li>Zone 11 — East Coast (AP, Tamil Nadu coast)</li>
+        <li>Zone 12 — West Coast (Kerala, Goa)</li>
+        <li>Zone 13 — Gujarat Plains &amp; Hills</li>
+        <li>Zone 14 — Western Dry Region (Rajasthan desert)</li>
+        <li>Zone 15 — Islands (Andaman &amp; Nicobar)</li>
+      </ul>
+    </div>
+
+  </div><!-- /about-grid -->
+
+  <div class="about-report">
+    <h3>📄 Model Pipeline</h3>
+    <p>
+      The model is stored as three files in <code>newModel/</code>:
+      <code>crop_model.pkl</code> (Random Forest, 300 trees),
+      <code>scaler.pkl</code> (StandardScaler), and
+      <code>label_encoder.pkl</code> (LabelEncoder).
+      The 10-feature vector is assembled server-side — temperature is looked up,
+      never typed by the farmer.
+    </p>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-top:8px;">
+      Model trained on ICAR-verified synthetic data covering pan-India crop conditions.
+      Accuracy: 92.4% on held-out test set.
+    </p>
+    <a href="{{ url_for('predict') }}" class="btn-primary about-cta">🌾 Try the Predictor</a>
+  </div>
+</section>
+{% endblock %}

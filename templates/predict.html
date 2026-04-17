@@ -1,0 +1,808 @@
+{% extends "base.html" %} {% block title %}BhoomiAI — Predict Crop{% endblock %}
+{% block content %}
+
+<style>
+/* ── STEP SECTIONS ── */
+.step-section { margin-bottom: 28px; }
+.step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--leaf), var(--leaf-bright));
+  color: white; font-size: 0.78rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.step-title { font-size: 0.92rem; font-weight: 700; color: rgba(255,255,255,0.9); letter-spacing: 0.02em; }
+.step-hint { font-size: 0.77rem; color: rgba(255,255,255,0.45); margin: -8px 0 14px; line-height: 1.5; }
+
+/* ── GPS ZONE DETECTION ── */
+.gps-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.gps-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(116,198,157,0.18); border: 1.5px solid rgba(116,198,157,0.5);
+  color: var(--leaf-light); border-radius: 10px; padding: 10px 18px;
+  font-size: 0.84rem; font-weight: 700; cursor: pointer; transition: all 0.25s;
+}
+.gps-btn:hover { background: rgba(116,198,157,0.28); transform: translateY(-1px); }
+.gps-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.gps-hint-text { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+
+.zone-detected-card {
+  display: none; align-items: center; gap: 14px;
+  background: rgba(116,198,157,0.12); border: 1.5px solid rgba(116,198,157,0.35);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  animation: fadeInCard 0.3s ease;
+}
+@keyframes fadeInCard { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.zone-emoji { font-size: 1.8rem; }
+.zone-info-text { flex: 1; }
+.zone-info-name { font-size: 0.92rem; font-weight: 700; color: var(--sun); }
+.zone-info-states { font-size: 0.75rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+.change-link {
+  background: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.55);
+  border-radius: 8px; padding: 5px 10px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+}
+.change-link:hover { color: white; border-color: rgba(255,255,255,0.4); }
+
+.zone-manual-wrap { margin-top: 4px; }
+.field-select {
+  width: 100%; background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 11px 14px;
+  color: white; font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+  outline: none; transition: border-color 0.2s, background 0.2s; cursor: pointer;
+}
+.field-select:focus { border-color: var(--leaf-light); background: rgba(255,255,255,0.14); }
+.field-select option { background: var(--soil); color: white; }
+.field-select.unselected { color: rgba(255,255,255,0.4); }
+
+/* ── SEASON AUTO-BADGE ── */
+.season-auto-card {
+  display: none; align-items: center; justify-content: space-between;
+  background: rgba(244,162,97,0.12); border: 1.5px solid rgba(244,162,97,0.35);
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 10px;
+}
+.season-auto-label { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+.season-auto-value { font-size: 0.92rem; font-weight: 700; color: var(--sun); margin-top: 2px; }
+
+/* ── SOIL INPUTS GRID ── */
+.soil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.soil-field { display: flex; flex-direction: column; gap: 6px; }
+.soil-label {
+  font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6);
+}
+.soil-hint { font-size: 0.71rem; color: rgba(255,255,255,0.38); line-height: 1.4; margin-top: 4px; }
+.soil-field-wide { grid-column: 1 / -1; }
+.soil-input {
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 11px 14px;
+  color: white; font-family: 'DM Mono', monospace; font-size: 0.92rem;
+  outline: none; transition: border-color 0.2s, background 0.2s;
+  -moz-appearance: textfield;
+}
+.soil-input::-webkit-outer-spin-button,
+.soil-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.soil-input::placeholder { color: rgba(255,255,255,0.28); }
+.soil-input:focus { border-color: var(--leaf-light); background: rgba(255,255,255,0.14); }
+.soil-input.invalid { border-color: #ef6c00; }
+.range-tag {
+  display: inline-block; margin-left: 6px;
+  font-size: 0.68rem; color: rgba(255,255,255,0.35); font-weight: 400;
+  text-transform: none; letter-spacing: 0;
+}
+
+/* ── FIELD WARNINGS ── */
+.field-warning {
+  display: none; margin-top: 6px; padding: 8px 12px;
+  background: rgba(239,108,0,0.15); border-left: 3px solid #ef6c00;
+  border-radius: 0 8px 8px 0; font-size: 0.76rem; color: #ffb74d; line-height: 1.4;
+}
+
+/* ── IRRIGATION ── */
+.irr-label small { display: block; font-size: 0.72rem; opacity: 0.6; margin-top: 2px; }
+
+/* ── DIVIDER ── */
+.form-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 6px 0 24px; }
+
+/* ── RESULT ENHANCEMENTS ── */
+.result-loading {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 20px; gap: 16px; color: rgba(255,255,255,0.45);
+}
+.spinner {
+  width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--leaf-light); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.crop-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(116,198,157,0.18); border: 1px solid rgba(116,198,157,0.35);
+  padding: 4px 12px; border-radius: 50px; font-size: 0.74rem; color: var(--leaf-light);
+  margin-bottom: 8px; align-self: center;
+}
+
+.result-explanation {
+  background: rgba(255,255,255,0.05); border-radius: 12px;
+  padding: 14px 16px; font-size: 0.83rem; color: rgba(255,255,255,0.75);
+  line-height: 1.65; border-left: 3px solid var(--leaf-light);
+}
+
+.warn-card {
+  background: rgba(239,108,0,0.12); border: 1px solid rgba(239,108,0,0.3);
+  border-radius: 10px; padding: 12px 14px; font-size: 0.78rem; color: #ffb74d;
+  line-height: 1.5; margin-top: 4px;
+}
+
+.context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .soil-grid { grid-template-columns: 1fr; }
+  .predictor-layout { grid-template-columns: 1fr; }
+  .context-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div id="predict" class="predictor-section">
+  <div class="predictor-inner">
+    <div class="section-label">🌾 AI Crop Advisor</div>
+    <h2 class="section-title">Crop Recommendation Engine</h2>
+    <p class="section-sub">
+      Enter your field details below. Zone and season are detected automatically from your GPS &amp; device date.
+      The AI model will recommend the best crop for your region with a confidence score.
+    </p>
+
+    <div class="predictor-layout">
+
+      <!-- ══ FORM CARD ══ -->
+      <div class="form-card">
+
+        <!-- STEP 1: LOCATION -->
+        <div class="step-section">
+          <div class="step-header">
+            <span class="step-num">1</span>
+            <span class="step-title">📍 Your Location</span>
+          </div>
+
+          <!-- GPS detect button -->
+          <div class="gps-row">
+            <button class="gps-btn" id="gpsBtn" onclick="detectGPS()">
+              <span id="gpsBtnIcon">📡</span>
+              <span id="gpsBtnText">Detect My Location</span>
+            </button>
+            <span class="gps-hint-text">or select your region below</span>
+          </div>
+
+          <!-- Detected zone card (hidden until GPS succeeds) -->
+          <div class="zone-detected-card" id="zoneDetectedCard">
+            <span class="zone-emoji">🗺️</span>
+            <div class="zone-info-text">
+              <div class="zone-info-name" id="zoneDetectedName">—</div>
+              <div class="zone-info-states" id="zoneDetectedStates">—</div>
+            </div>
+            <button class="change-link" onclick="resetZone()">✏️ Change</button>
+          </div>
+
+          <!-- Manual zone dropdown -->
+          <div class="zone-manual-wrap" id="zoneManualWrap">
+            <select class="field-select unselected" id="f_zone_manual" onchange="setManualZone(this.value)">
+              <option value="">I am in… select your region</option>
+              <option value="1">Zone 1 — Himachal Pradesh, Uttarakhand, J&amp;K</option>
+              <option value="2">Zone 2 — Assam, Arunachal, NE States</option>
+              <option value="3">Zone 3 — West Bengal, South Bihar</option>
+              <option value="4">Zone 4 — Eastern UP, North Bihar</option>
+              <option value="5">Zone 5 — Western UP, East Haryana</option>
+              <option value="6">Zone 6 — Punjab, Haryana, Delhi</option>
+              <option value="7">Zone 7 — Jharkhand, Odisha, Chhattisgarh</option>
+              <option value="8">Zone 8 — Madhya Pradesh, Bundelkhand</option>
+              <option value="9">Zone 9 — Maharashtra (Deccan / Marathwada)</option>
+              <option value="10">Zone 10 — Karnataka, Telangana</option>
+              <option value="11">Zone 11 — Andhra Pradesh coast, Tamil Nadu</option>
+              <option value="12">Zone 12 — Kerala, Goa, Coastal Karnataka</option>
+              <option value="13">Zone 13 — Gujarat, South Rajasthan</option>
+              <option value="14">Zone 14 — Rajasthan (desert region)</option>
+              <option value="15">Zone 15 — Andaman &amp; Nicobar Islands</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- STEP 2: SEASON -->
+        <div class="step-section">
+          <div class="step-header">
+            <span class="step-num">2</span>
+            <span class="step-title">📅 Crop Season</span>
+          </div>
+
+          <!-- Auto-detected season badge -->
+          <div class="season-auto-card" id="seasonAutoCard">
+            <div>
+              <div class="season-auto-label">Auto-detected from today's date</div>
+              <div class="season-auto-value" id="seasonAutoValue">—</div>
+            </div>
+            <button class="change-link" onclick="toggleSeasonManual()">✏️ Change</button>
+          </div>
+
+          <!-- Season radio selector -->
+          <div class="season-selector" id="seasonSelector">
+            <label class="season-option">
+              <input type="radio" name="season" value="Rabi" />
+              <span class="season-label">
+                <strong>Rabi</strong><br/>
+                <small>Winter (Nov–Mar)</small>
+              </span>
+            </label>
+            <label class="season-option">
+              <input type="radio" name="season" value="Kharif" />
+              <span class="season-label">
+                <strong>Kharif</strong><br/>
+                <small>Monsoon (Jun–Oct)</small>
+              </span>
+            </label>
+            <label class="season-option">
+              <input type="radio" name="season" value="Zaid" />
+              <span class="season-label">
+                <strong>Zaid</strong><br/>
+                <small>Summer (Apr–Jun)</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- STEP 3: SOIL PARAMETERS -->
+        <div class="step-section">
+          <div class="step-header">
+            <span class="step-num">3</span>
+            <span class="step-title">🧪 Soil Parameters</span>
+          </div>
+          <p class="step-hint">Select values that best match your field. Choose the closest option.</p>
+
+          <div class="soil-grid">
+
+            <!-- Nitrogen -->
+            <div class="soil-field">
+              <label class="soil-label" for="f_n">🧪 Nitrogen (N)
+                <span class="range-tag">80 – 460 kg/ha</span>
+              </label>
+              <input type="number" class="soil-input" id="f_n"
+                placeholder="e.g. 200" min="0" max="600" step="1" />
+              <span class="soil-hint">Low (~80) = sandy soil &nbsp;|&nbsp; High (~460) = fertile alluvial plains</span>
+            </div>
+
+            <!-- Phosphorus -->
+            <div class="soil-field">
+              <label class="soil-label" for="f_p">🧪 Phosphorus (P)
+                <span class="range-tag">6 – 48 kg/ha</span>
+              </label>
+              <input type="number" class="soil-input" id="f_p"
+                placeholder="e.g. 26" min="0" max="100" step="1" />
+              <span class="soil-hint">Low (~6) = Kerala / NE India &nbsp;|&nbsp; High (~48) = plains</span>
+            </div>
+
+            <!-- Potassium -->
+            <div class="soil-field">
+              <label class="soil-label" for="f_k">🧪 Potassium (K)
+                <span class="range-tag">80 – 380 kg/ha</span>
+              </label>
+              <input type="number" class="soil-input" id="f_k"
+                placeholder="e.g. 240" min="0" max="600" step="1" />
+              <span class="soil-hint">Low (~80) = coastal &nbsp;|&nbsp; High (~380) = black cotton soil</span>
+            </div>
+
+            <!-- pH -->
+            <div class="soil-field">
+              <label class="soil-label" for="f_ph">⚗ Soil pH
+                <span class="range-tag">4.5 – 9.2</span>
+              </label>
+              <input type="number" class="soil-input" id="f_ph"
+                placeholder="e.g. 7.0" min="3" max="10" step="0.1"
+                oninput="checkPhWarning(this.value)" />
+              <span class="soil-hint">4.5 = very acidic ←→ 7.0 = neutral ←→ 9.2 = very alkaline</span>
+              <div class="field-warning" id="phWarning"></div>
+            </div>
+
+            <!-- Soil Moisture (full width) -->
+            <div class="soil-field soil-field-wide">
+              <label class="soil-label" for="f_moisture">💧 Soil Moisture
+                <span class="range-tag">8 – 65 %</span>
+              </label>
+              <input type="number" class="soil-input" id="f_moisture"
+                placeholder="e.g. 35" min="0" max="100" step="1" />
+              <span class="soil-hint">8% = dry desert &nbsp;|&nbsp; 35% = normal farmland &nbsp;|&nbsp; 65% = waterlogged / flooded</span>
+            </div>
+
+          </div><!-- /soil-grid -->
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- STEP 4: IRRIGATION -->
+        <div class="step-section" style="margin-bottom: 8px;">
+          <div class="step-header">
+            <span class="step-num">4</span>
+            <span class="step-title">🚿 Irrigation Access</span>
+          </div>
+          <p class="step-hint">Do you have access to canal, tubewell, or drip irrigation?</p>
+
+          <div class="irrigation-toggle">
+            <label class="irr-option">
+              <input type="radio" name="irrigation" value="1" />
+              <span class="irr-label">
+                ✅ Yes
+                <small>Canal, tubewell, or drip</small>
+              </span>
+            </label>
+            <label class="irr-option">
+              <input type="radio" name="irrigation" value="0" />
+              <span class="irr-label">
+                🌧 No
+                <small>Rainwater only</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <button class="predict-btn" id="predictBtn" onclick="runPredict()">
+          🌾 Get Crop Recommendation
+        </button>
+
+      </div><!-- /form-card -->
+
+      <!-- ══ RESULT CARD ══ -->
+      <div class="result-card">
+
+        <!-- Empty state -->
+        <div class="result-empty" id="resultEmpty">
+          <span class="r-icon">🔬</span>
+          <p>Fill in your field details and click<br/><strong>Get Crop Recommendation</strong></p>
+          <br/>
+          <p style="font-size:0.75rem;opacity:0.5">
+            ⚡ Random Forest model · 92.4% accuracy · 4 crops
+          </p>
+        </div>
+
+        <!-- Loading -->
+        <div class="result-loading" id="resultLoading">
+          <div class="spinner"></div>
+          <span style="font-size:0.85rem">Analysing your soil data…</span>
+        </div>
+
+        <!-- Output -->
+        <div class="result-output" id="resultOutput" style="display:none;">
+          <div class="crop-badge" id="resBadge">🌾 Recommended Crop</div>
+          <span class="result-icon-big" id="resIcon">🌱</span>
+          <div class="result-crop-name" id="resCropName">—</div>
+
+          <div class="confidence-bar-wrap">
+            <div class="confidence-label">
+              <span>Model Confidence</span>
+              <span id="confPct">—</span>
+            </div>
+            <div class="confidence-track">
+              <div class="confidence-fill" id="confBar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Warnings -->
+          <div class="warn-card" id="warnCard" style="display:none"></div>
+
+          <!-- Crop explanation -->
+          <div class="result-explanation" id="resExplanation" style="display:none"></div>
+
+          <!-- Crop probability bars -->
+          <div class="result-details">
+            <div class="result-det-title">Crop Suitability Scores</div>
+            <div class="vote-bars" id="voteBars"></div>
+          </div>
+
+          <!-- Context summary -->
+          <div class="result-details">
+            <div class="result-det-title">Field Summary</div>
+            <div class="context-grid" id="contextGrid"></div>
+          </div>
+
+          <!-- Fertilizer CTA — filled by JS after prediction -->
+          <div id="fertCTA" style="display:none"></div>
+
+        </div><!-- /result-output -->
+
+        <!-- Error -->
+        <div id="resultError" style="display:none;color:#ef6c00;padding:16px;font-size:0.85rem;line-height:1.6;"></div>
+
+      </div><!-- /result-card -->
+    </div><!-- /predictor-layout -->
+  </div><!-- /predictor-inner -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Zone Bounding Box Data ────────────────────────────────────────────────────
+const ZONE_BOUNDS = [
+  { id:1,  code:'WHR', name:'Western Himalayan Region',    states:'Himachal Pradesh, Uttarakhand, J&K',   latMin:30, latMax:35, lonMin:74, lonMax:80 },
+  { id:2,  code:'EHR', name:'Eastern Himalayan Region',    states:'Assam, Arunachal, NE States',          latMin:24, latMax:29, lonMin:88, lonMax:98 },
+  { id:3,  code:'LGP', name:'Lower Gangetic Plains',       states:'West Bengal, South Bihar',             latMin:21, latMax:26, lonMin:85, lonMax:92 },
+  { id:4,  code:'MGP', name:'Middle Gangetic Plains',      states:'Eastern UP, North Bihar',              latMin:24, latMax:28, lonMin:80, lonMax:87 },
+  { id:5,  code:'UGP', name:'Upper Gangetic Plains',       states:'Western UP, East Haryana',             latMin:26, latMax:30, lonMin:76, lonMax:82 },
+  { id:6,  code:'TGP', name:'Trans-Gangetic Plains',       states:'Punjab, Haryana, Delhi',               latMin:28, latMax:32, lonMin:73, lonMax:78 },
+  { id:7,  code:'EPH', name:'Eastern Plateau & Hills',     states:'Jharkhand, Odisha, Chhattisgarh',      latMin:18, latMax:24, lonMin:82, lonMax:88 },
+  { id:8,  code:'CPH', name:'Central Plateau & Hills',     states:'Madhya Pradesh, Bundelkhand',          latMin:20, latMax:25, lonMin:75, lonMax:82 },
+  { id:9,  code:'WPH', name:'Western Plateau & Hills',     states:'Maharashtra (Deccan / Marathwada)',    latMin:17, latMax:22, lonMin:73, lonMax:78 },
+  { id:10, code:'SPH', name:'Southern Plateau & Hills',    states:'Karnataka, Telangana',                 latMin:13, latMax:18, lonMin:75, lonMax:80 },
+  { id:11, code:'ECP', name:'East Coast Plains & Hills',   states:'Andhra Pradesh, Tamil Nadu coast',     latMin:11, latMax:18, lonMin:78, lonMax:84 },
+  { id:12, code:'WCP', name:'West Coast Plains & Ghats',   states:'Kerala, Goa, Coastal Karnataka',       latMin:8,  latMax:15, lonMin:74, lonMax:78 },
+  { id:13, code:'GPH', name:'Gujarat Plains & Hills',      states:'Gujarat, South Rajasthan',             latMin:20, latMax:25, lonMin:70, lonMax:75 },
+  { id:14, code:'WDR', name:'Western Dry Region',          states:'Rajasthan (desert region)',            latMin:24, latMax:30, lonMin:68, lonMax:74 },
+  { id:15, code:'ISL', name:'Islands Region',              states:'Andaman & Nicobar Islands',            latMin:6,  latMax:14, lonMin:90, lonMax:94 },
+];
+
+// ── Crop Icons & Colors ───────────────────────────────────────────────────────
+const CROP_ICONS   = { Rice:'🌾', Wheat:'🌾', Maize:'🌽', Sugarcane:'🎋' };
+const CROP_COLORS  = { Rice:'#1976d2', Wheat:'#f4a261', Maize:'#ef6c00', Sugarcane:'#558b2f' };
+
+// ── Farmer-Friendly Crop Descriptions ────────────────────────────────────────
+const CROP_DESC = {
+  Rice:      'Rice thrives in warm, humid conditions with plenty of water. It typically grows from June to November (Kharif season) and needs standing water in the field during early growth stages.',
+  Wheat:     'Wheat is a cool-season crop that grows from November to March (Rabi season). It needs one or two irrigations but does not require heavy rainfall. Punjab and UP are India\'s primary wheat belt.',
+  Maize:     'Maize is a flexible Kharif crop that tolerates drier conditions than Rice. It matures in 80–90 days and can be grown across many soil types — from plains to hills.',
+  Sugarcane: 'Sugarcane is a long-duration crop (12–18 months) that needs warm weather and reliable irrigation. It offers high income potential but requires significant water and fertilizer investment.',
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let selectedZoneId = null;
+let seasonOverrideVisible = false;
+
+// ── Season Auto-Detection ─────────────────────────────────────────────────────
+function getSeasonFromMonth(m) {
+  if ([4,5].includes(m))           return 'Zaid';
+  if ([6,7,8,9,10].includes(m))    return 'Kharif';
+  return 'Rabi';
+}
+const SEASON_DISPLAY = {
+  Kharif: 'Kharif — Monsoon season (Jun–Oct)',
+  Rabi:   'Rabi — Winter season (Nov–Mar)',
+  Zaid:   'Zaid — Summer season (Apr–Jun)',
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  const month = new Date().getMonth() + 1;
+  const autoSeason = getSeasonFromMonth(month);
+
+  // Set radio
+  const radio = document.querySelector(`input[name="season"][value="${autoSeason}"]`);
+  if (radio) radio.checked = true;
+
+  // Show auto-badge, hide manual radio
+  document.getElementById('seasonAutoValue').textContent = SEASON_DISPLAY[autoSeason];
+  document.getElementById('seasonAutoCard').style.display = 'flex';
+  document.getElementById('seasonSelector').style.display = 'none';
+});
+
+function toggleSeasonManual() {
+  seasonOverrideVisible = !seasonOverrideVisible;
+  document.getElementById('seasonSelector').style.display = seasonOverrideVisible ? 'grid' : 'none';
+}
+
+// ── GPS Detection ──────────────────────────────────────────────────────────────
+function detectGPS() {
+  if (!navigator.geolocation) {
+    showGPSMsg('GPS not supported in this browser. Please select region below.');
+    return;
+  }
+  const btn = document.getElementById('gpsBtn');
+  const icon = document.getElementById('gpsBtnIcon');
+  const text = document.getElementById('gpsBtnText');
+  btn.disabled = true;
+  icon.textContent = '⏳';
+  text.textContent = 'Detecting location…';
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      const zone = getZoneFromCoords(lat, lon);
+      btn.disabled = false;
+      icon.textContent = '📡';
+      text.textContent = 'Detect My Location';
+      if (zone) {
+        setDetectedZone(zone);
+      } else {
+        showGPSMsg('⚠ Location not in a recognised agricultural zone. Please select your region below.');
+      }
+    },
+    (err) => {
+      btn.disabled = false;
+      icon.textContent = '📡';
+      text.textContent = 'Detect My Location';
+      showGPSMsg('GPS permission denied. Please select your region from the dropdown below.');
+    },
+    { timeout: 10000 }
+  );
+}
+
+function getZoneFromCoords(lat, lon) {
+  for (const z of ZONE_BOUNDS) {
+    if (lat >= z.latMin && lat <= z.latMax && lon >= z.lonMin && lon <= z.lonMax) return z;
+  }
+  return null;
+}
+
+function setDetectedZone(zone) {
+  selectedZoneId = zone.id;
+  document.getElementById('zoneDetectedName').textContent   = `${zone.name} (${zone.code})`;
+  document.getElementById('zoneDetectedStates').textContent = zone.states;
+  document.getElementById('zoneDetectedCard').style.display = 'flex';
+  document.getElementById('zoneManualWrap').style.display   = 'none';
+  // sync manual dropdown too
+  document.getElementById('f_zone_manual').value = zone.id;
+}
+
+function setManualZone(val) {
+  if (!val) { selectedZoneId = null; return; }
+  const zone = ZONE_BOUNDS.find(z => z.id === parseInt(val));
+  if (zone) {
+    selectedZoneId = zone.id;
+    document.getElementById('zoneDetectedName').textContent   = `${zone.name} (${zone.code})`;
+    document.getElementById('zoneDetectedStates').textContent = zone.states;
+    document.getElementById('zoneDetectedCard').style.display = 'flex';
+    document.getElementById('f_zone_manual').classList.remove('unselected');
+  }
+}
+
+function resetZone() {
+  selectedZoneId = null;
+  document.getElementById('zoneDetectedCard').style.display = 'none';
+  document.getElementById('zoneManualWrap').style.display   = 'block';
+  document.getElementById('f_zone_manual').value = '';
+  document.getElementById('f_zone_manual').classList.add('unselected');
+  const btn = document.getElementById('gpsBtn');
+  btn.disabled = false;
+  document.getElementById('gpsBtnIcon').textContent = '📡';
+  document.getElementById('gpsBtnText').textContent = 'Detect My Location';
+}
+
+function showGPSMsg(msg) {
+  // Show as a subtle note under the GPS button
+  let note = document.getElementById('gpsNote');
+  if (!note) {
+    note = document.createElement('div');
+    note.id = 'gpsNote';
+    note.style.cssText = 'font-size:0.75rem;color:#ffb74d;margin:-4px 0 10px;line-height:1.5;';
+    document.getElementById('gpsBtn').parentElement.after(note);
+  }
+  note.textContent = msg;
+}
+
+// ── pH Warning ────────────────────────────────────────────────────────────────
+function checkPhWarning(val) {
+  const w   = document.getElementById('phWarning');
+  const num = parseFloat(val);
+  if (!val || isNaN(num)) { w.style.display = 'none'; return; }
+  if (num <= 4.5) {
+    w.textContent  = '⚠ Very acidic soil — consider lime treatment before sowing.';
+    w.style.display = 'block';
+  } else if (num >= 9.0) {
+    w.textContent  = '⚠ Very alkaline soil — gypsum / sulphur treatment may be needed.';
+    w.style.display = 'block';
+  } else {
+    w.style.display = 'none';
+  }
+}
+
+// ── Validation ────────────────────────────────────────────────────────────────
+function validate() {
+  if (!selectedZoneId) {
+    showError('Please select your region — use GPS or choose from the dropdown.');
+    return false;
+  }
+  const season = document.querySelector('input[name="season"]:checked')?.value;
+  if (!season) { showError('Please select a crop season.'); return false; }
+
+  const missing = [];
+  const nVal  = parseFloat(document.getElementById('f_n').value);
+  const pVal  = parseFloat(document.getElementById('f_p').value);
+  const kVal  = parseFloat(document.getElementById('f_k').value);
+  const phVal = parseFloat(document.getElementById('f_ph').value);
+  const mVal  = parseFloat(document.getElementById('f_moisture').value);
+
+  if (isNaN(nVal)  || document.getElementById('f_n').value === '')        missing.push('Nitrogen N (kg/ha)');
+  if (isNaN(pVal)  || document.getElementById('f_p').value === '')        missing.push('Phosphorus P (kg/ha)');
+  if (isNaN(kVal)  || document.getElementById('f_k').value === '')        missing.push('Potassium K (kg/ha)');
+  if (isNaN(phVal) || document.getElementById('f_ph').value === '')       missing.push('Soil pH');
+  if (isNaN(mVal)  || document.getElementById('f_moisture').value === '') missing.push('Soil Moisture (%)');
+  if (!document.querySelector('input[name="irrigation"]:checked'))        missing.push('Irrigation access (Yes/No)');
+
+  // Range warnings (soft — still allow prediction)
+  if (!isNaN(phVal) && (phVal < 3 || phVal > 10)) {
+    showError('Soil pH must be between 3.0 and 10.0. Please re-enter.');
+    return false;
+  }
+  if (!isNaN(mVal) && (mVal < 0 || mVal > 100)) {
+    showError('Soil Moisture must be between 0% and 100%.');
+    return false;
+  }
+
+  if (missing.length > 0) {
+    showError(`Please fill in: ${missing.join(', ')}`);
+    return false;
+  }
+  return true;
+}
+
+// ── Run Predict ───────────────────────────────────────────────────────────────
+async function runPredict() {
+  if (!validate()) return;
+
+  const season      = document.querySelector('input[name="season"]:checked').value;
+  const nitrogen    = parseFloat(document.getElementById('f_n').value);
+  const phosphorus  = parseFloat(document.getElementById('f_p').value);
+  const potassium   = parseFloat(document.getElementById('f_k').value);
+  const ph          = parseFloat(document.getElementById('f_ph').value);
+  const soilMoist   = parseFloat(document.getElementById('f_moisture').value);
+  const irrigation  = parseFloat(document.querySelector('input[name="irrigation"]:checked').value);
+
+  const payload = {
+    new_ui:       true,
+    zone_id:      selectedZoneId,
+    season:       season,
+    nitrogen:     nitrogen,
+    phosphorus:   phosphorus,
+    potassium:    potassium,
+    ph:           ph,
+    soil_moisture: soilMoist,
+    irrigation:   irrigation,
+  };
+
+  // UI: show loading
+  document.getElementById('resultEmpty').style.display   = 'none';
+  document.getElementById('resultError').style.display   = 'none';
+  document.getElementById('resultOutput').style.display  = 'none';
+  document.getElementById('resultLoading').style.display = 'flex';
+  document.getElementById('predictBtn').disabled = true;
+
+  try {
+    const res  = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    document.getElementById('resultLoading').style.display = 'none';
+    document.getElementById('predictBtn').disabled = false;
+
+    if (data.error) { showError(data.error); return; }
+    renderResult(data, payload, ph, soilMoist, season, irrigation);
+  } catch (e) {
+    document.getElementById('resultLoading').style.display = 'none';
+    document.getElementById('predictBtn').disabled = false;
+    showError('Network error: ' + e.message);
+  }
+}
+
+// ── Render Result ─────────────────────────────────────────────────────────────
+function renderResult(data, payload, ph, soilMoist, season, irrigation) {
+  const { crop, confidence, votes, zone_name, is_island_zone } = data;
+
+  document.getElementById('resultEmpty').style.display  = 'none';
+  document.getElementById('resultError').style.display  = 'none';
+  const out = document.getElementById('resultOutput');
+  out.style.display = 'flex';
+
+  // Crop name & icon
+  document.getElementById('resIcon').textContent    = CROP_ICONS[crop] || '🌱';
+  document.getElementById('resCropName').textContent = crop;
+  document.getElementById('resBadge').textContent   = `🌾 Recommended for ${season}`;
+
+  // Save to sessionStorage so fertilizer advisor can pre-fill crop + zone
+  sessionStorage.setItem('bhoomi_predicted_crop', crop);
+  sessionStorage.setItem('bhoomi_zone_id',        selectedZoneId);
+  sessionStorage.setItem('bhoomi_season',          season);
+
+  // Confidence bar
+  document.getElementById('confPct').textContent = `${confidence}%`;
+  setTimeout(() => {
+    document.getElementById('confBar').style.width = Math.min(confidence, 100) + '%';
+  }, 60);
+
+  // ── Warnings ──────────────────────────────────────────────────────────────
+  const warns = [];
+  if (is_island_zone) {
+    warns.push('⚠ Limited training data for island regions. Consult your local agriculture office for confirmation.');
+  }
+  if (confidence < 60) {
+    warns.push('⚠ Low confidence prediction — soil conditions are ambiguous. Review NPK and pH values, or consult a soil expert.');
+  }
+  if (crop === 'Sugarcane' && [6,5,4,8].includes(selectedZoneId) && season === 'Zaid') {
+    warns.push('💧 Sugarcane is a long-duration crop (12–18 months). Ensure you have reliable irrigation throughout the year before sowing.');
+  }
+  const warnCard = document.getElementById('warnCard');
+  if (warns.length > 0) {
+    warnCard.innerHTML = warns.map(w => `<div style="margin-bottom:6px">${w}</div>`).join('');
+    warnCard.style.display = 'block';
+  } else {
+    warnCard.style.display = 'none';
+  }
+
+  // ── Explanation ────────────────────────────────────────────────────────────
+  const phFloat = parseFloat(ph);
+  let phDesc = 'neutral';
+  if (phFloat <= 5.5)      phDesc = 'acidic';
+  else if (phFloat <= 6.5) phDesc = 'slightly acidic';
+  else if (phFloat <= 7.5) phDesc = 'neutral to slightly alkaline';
+  else                     phDesc = 'alkaline';
+
+  const moistDesc = soilMoist >= 50 ? 'high' : soilMoist >= 35 ? 'moderate' : 'low';
+  const irrDesc   = irrigation === 1 ? 'irrigated field' : 'rainfed field';
+  const zoneLabel = zone_name || `Zone ${selectedZoneId}`;
+
+  const explanation = `Your soil shows ${phDesc} pH (${ph}) with ${moistDesc} moisture (${soilMoist}%) in a ${irrDesc} in the ${zoneLabel} area. ${CROP_DESC[crop] || ''}`;
+
+  const expEl = document.getElementById('resExplanation');
+  expEl.textContent    = explanation;
+  expEl.style.display  = 'block';
+
+  // ── Probability Bars ───────────────────────────────────────────────────────
+  const vb = document.getElementById('voteBars');
+  vb.innerHTML = '';
+  const sortedVotes = Object.entries(votes).sort(([,a],[,b]) => b - a);
+  sortedVotes.forEach(([cls, pct]) => {
+    vb.innerHTML += `
+      <div class="vote-row">
+        <span class="vote-name">${CROP_ICONS[cls] || '🌱'} ${cls}</span>
+        <div class="vote-track">
+          <div class="vote-fill" style="width:0%;background:${CROP_COLORS[cls] || '#40916c'}" data-pct="${pct}"></div>
+        </div>
+        <span class="vote-pct">${pct}%</span>
+      </div>`;
+  });
+  setTimeout(() => {
+    vb.querySelectorAll('.vote-fill').forEach(el => { el.style.width = el.dataset.pct + '%'; });
+  }, 100);
+
+  // ── Context Grid ───────────────────────────────────────────────────────────
+  const zone = ZONE_BOUNDS.find(z => z.id === selectedZoneId);
+  const ctxItems = [
+    { lbl: '📍 Region',    val: zone ? `${zone.name} (${zone.code})` : `Zone ${selectedZoneId}` },
+    { lbl: '📅 Season',    val: season },
+    { lbl: '🧪 N-P-K',    val: `${payload.nitrogen}-${payload.phosphorus}-${payload.potassium} kg/ha` },
+    { lbl: '⚗ pH',       val: ph },
+    { lbl: '💧 Moisture', val: `${soilMoist}%` },
+    { lbl: '🚿 Water',    val: irrigation === 1 ? 'Irrigated' : 'Rainfed' },
+    { lbl: '🤖 Model',    val: data.model_version || 'new' },
+    { lbl: '📊 Accuracy', val: '92.4%' },
+  ];
+
+  document.getElementById('contextGrid').innerHTML = ctxItems
+    .map(i => `<div class="det-item"><div class="di-lbl">${i.lbl}</div><div class="di-val">${i.val}</div></div>`)
+    .join('');
+
+  // ── Fertilizer CTA ────────────────────────────────────────────────────────
+  const fertCTA = document.getElementById('fertCTA');
+  if (fertCTA) {
+    fertCTA.style.display = 'block';
+    fertCTA.innerHTML = `
+      <a href="/fertilizer-recommend"
+         style="display:flex;align-items:center;justify-content:center;gap:8px;
+                margin-top:16px;padding:12px;border-radius:10px;background:#2d6a4f;
+                color:#fff;font-weight:700;font-size:.9rem;text-decoration:none;
+                transition:background .2s" onmouseover="this.style.background='#1b4332'"
+                onmouseout="this.style.background='#2d6a4f'">
+        💊 Get Fertilizer Schedule for ${crop}
+      </a>`;
+  }
+}
+
+// ── Error Display ─────────────────────────────────────────────────────────────
+function showError(msg) {
+  document.getElementById('resultEmpty').style.display  = 'none';
+  document.getElementById('resultOutput').style.display = 'none';
+  document.getElementById('resultLoading').style.display = 'none';
+  const e = document.getElementById('resultError');
+  e.style.display = 'block';
+  e.innerHTML = `⚠ ${msg}`;
+}
+</script>
+{% endblock %}

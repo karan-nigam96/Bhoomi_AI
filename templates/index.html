@@ -1,0 +1,102 @@
+{% extends "base.html" %} {% block title %}BhoomiAI — Smart Crop Recommendation for Bharat{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<div id="home" class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">🇮🇳 Government of India · ICAR Agroclimatic Data</div>
+    <h1>Smart <em>Crop</em><br />Recommendation<br />for Bharat</h1>
+    <p>
+      AI-powered crop advisory built on 15 ICAR agro-climatic zones and
+      NASA 21-year climate averages. Enter your soil data and get instant
+      recommendations for Wheat, Rice, Maize, and Sugarcane.
+    </p>
+    <div class="hero-btns">
+      <a href="{{ url_for('predict') }}" class="btn-primary">🌾 Get Recommendation</a>
+      <a href="{{ url_for('crops') }}" class="btn-secondary">📋 Crop Guide</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="crop-grid">
+      <div class="crop-card-mini fade-in">
+        <div class="icon">🌾</div>
+        <h4>Wheat</h4>
+        <p>Rabi · Nov–Mar</p>
+      </div>
+      <div class="crop-card-mini fade-in">
+        <div class="icon">🌾</div>
+        <h4>Rice</h4>
+        <p>Kharif · Jun–Oct</p>
+      </div>
+      <div class="crop-card-mini fade-in">
+        <div class="icon">🌽</div>
+        <h4>Maize</h4>
+        <p>Kharif · Jun–Oct</p>
+      </div>
+      <div class="crop-card-mini fade-in">
+        <div class="icon">🎋</div>
+        <h4>Sugarcane</h4>
+        <p>Annual · Feb–Mar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="num">92.4%</span><span class="lbl">Model Accuracy</span>
+  </div>
+  <div class="stat-item">
+    <span class="num">300</span><span class="lbl">Random Forest Trees</span>
+  </div>
+  <div class="stat-item">
+    <span class="num">10</span><span class="lbl">Input Features</span>
+  </div>
+  <div class="stat-item">
+    <span class="num">4</span><span class="lbl">Major Indian Crops</span>
+  </div>
+  <div class="stat-item">
+    <span class="num">15</span><span class="lbl">ICAR Agroclimatic Zones</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="section-label">How It Works</div>
+  <h2 class="section-title">Three steps to smarter farming</h2>
+  <p class="section-sub">
+    Our 300-tree Random Forest model analyses your zone, season, and
+    soil data — temperature is auto-computed, no sensor required.
+  </p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-icon">📍</div>
+      <h3>Detect Your Zone</h3>
+      <p>
+        Tap "Detect My Location" — GPS auto-maps your coordinates to one
+        of 15 ICAR agro-climatic zones. No GPS? Pick your region from
+        the dropdown.
+      </p>
+    </div>
+    <div class="how-card">
+      <div class="how-icon">🤖</div>
+      <h3>AI Analysis</h3>
+      <p>
+        Enter your soil N, P, K, pH, moisture, and irrigation access.
+        Season temperature is auto-looked up from NASA 21-year averages —
+        no manual weather input needed.
+      </p>
+    </div>
+    <div class="how-card">
+      <div class="how-icon">🌾</div>
+      <h3>Get Recommendation</h3>
+      <p>
+        Receive the best crop with 92.4% accuracy, confidence score,
+        crop suitability rankings for all 4 crops, and a farmer-friendly
+        explanation of the result.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

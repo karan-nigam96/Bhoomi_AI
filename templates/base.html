@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BhoomiAI — Smart Crop Recommendation{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- NAV -->
+<nav>
+  <a href="{{ url_for('index') }}" class="nav-logo" aria-label="BhoomiAI home">🌿 Bhoomi<span>AI</span></a>
+
+  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+    <span class="nav-toggle-bars" aria-hidden="true"></span>
+  </button>
+
+  <div class="nav-menu" id="navMenu">
+    <ul class="nav-links">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('crops') }}">Crops</a></li>
+      <li><a href="{{ url_for('fertilizers') }}">Fertilizers</a></li>
+      <li><a href="{{ url_for('fertilizer_recommend') }}">💊 Fertilizer Advisor</a></li>
+      <li><a href="{{ url_for('predict') }}">Predict</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- PAGE CONTENT -->
+<main id="main">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo">🌿 Bhoomi<span>AI</span></div>
+        <p>Smart crop advisory powered by ICAR agroclimatic data, NASA climate tables, and a 300-tree Random Forest model. Built for Indian farmers.</p>
+      </div>
+      <div class="footer-links">
+        <h5>Quick Links</h5>
+        <ul>
+          <li><a href="{{ url_for('predict') }}">Predict Crop</a></li>
+          <li><a href="{{ url_for('crops') }}">Crop Guide</a></li>
+          <li><a href="{{ url_for('fertilizers') }}">Fertilizer Guide</a></li>
+          <li><a href="{{ url_for('about') }}">About / Model</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h5>Data Sources</h5>
+        <ul>
+          <li><a href="#">ICAR Crop Production Guide</a></li>
+          <li><a href="#">MoAFW India</a></li>
+          <li><a href="#">NBSS&LUP Soil Profiles</a></li>
+          <li><a href="#">IMD Agroclimatic Zones</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 BhoomiAI · ICAR-referenced data · For educational & agricultural advisory use</span>
+      <span class="pi-badge">🌿 92.4% Accuracy · 300 Trees · 10 Features</span>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

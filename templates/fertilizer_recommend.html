@@ -1,0 +1,740 @@
+{% extends "base.html" %}
+{% block title %}Fertilizer Advisor — BhoomiAI{% endblock %}
+
+{% block head %}
+<style>
+/* ── Fertilizer Advisor Page ─────────────────────────────────────────────── */
+.fert-hero {
+  background: linear-gradient(135deg, #1a2f1e 0%, #2a3f2e 50%, #1c2a1f 100%);
+  padding: 52px 32px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.fert-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(61,122,92,.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.fert-hero-inner {
+  max-width: 900px; margin: 0 auto; position: relative; z-index: 1;
+}
+.fert-hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(61,122,92,.18); border: 1px solid rgba(61,122,92,.35);
+  color: #74c69d; border-radius: 20px; padding: 5px 14px;
+  font-size: .74rem; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; margin-bottom: 18px;
+}
+.fert-hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.9rem, 4vw, 3rem); color: #f5f0e8; margin: 0 0 12px; line-height: 1.2;
+}
+.fert-hero h1 em { color: #74c69d; font-style: normal; }
+.fert-hero p {
+  font-size: .96rem; color: rgba(245,240,232,.65); max-width: 580px; line-height: 1.7;
+}
+.fert-hero-meta {
+  display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap;
+}
+.fert-meta-pill {
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px; padding: 6px 14px;
+  font-size: .78rem; color: rgba(245,240,232,.7);
+}
+.fert-meta-pill strong { color: #f4a261; }
+
+/* ── Form Layout ─────────────────────────────────────────────────────────── */
+.fert-layout {
+  display: grid; grid-template-columns: 1fr 420px; gap: 28px;
+  max-width: 1200px; margin: 0 auto; padding: 40px 32px;
+  align-items: start;
+}
+@media(max-width: 900px) {
+  .fert-layout { grid-template-columns: 1fr; padding: 24px 16px; }
+}
+
+.fert-form-col { display: flex; flex-direction: column; gap: 24px; }
+
+/* ── Section Card ────────────────────────────────────────────────────────── */
+.fert-card {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+.fert-card-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid #f0ece4;
+}
+.fert-step-badge {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #3d7a5c; color: #fff;
+  display: grid; place-items: center;
+  font-size: .75rem; font-weight: 700; flex-shrink: 0;
+}
+.fert-card-header h3 {
+  font-size: .95rem; font-weight: 700; color: #1a2f1e; margin: 0;
+}
+.fert-card-body { padding: 20px 24px; }
+
+/* ── Source Note ─────────────────────────────────────────────────────────── */
+.source-note {
+  font-size: .75rem; color: #8a9e8f; background: #f4faf7;
+  border-left: 3px solid #74c69d; padding: 7px 12px; border-radius: 0 6px 6px 0;
+  margin-bottom: 16px;
+}
+
+/* ── Form Controls ────────────────────────────────────────────────────────── */
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row-1 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media(max-width: 560px) { .form-row-2 { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: .78rem; font-weight: 600; color: #4a6b52; letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.field label .unit {
+  font-weight: 400; color: #8a9e8f; text-transform: none; letter-spacing: 0;
+}
+.field input[type="number"],
+.field select {
+  padding: 11px 14px; border: 1.5px solid #d8e8dd; border-radius: 10px;
+  font-family: inherit; font-size: .92rem; color: #1a2f1e;
+  background: #fafcfa; transition: border-color .2s, box-shadow .2s;
+  -moz-appearance: textfield; width: 100%; box-sizing: border-box;
+}
+.field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+.field input:focus, .field select:focus {
+  outline: none; border-color: #3d7a5c;
+  box-shadow: 0 0 0 3px rgba(61,122,92,.12);
+}
+.field .hint { font-size: .73rem; color: #9aaf9e; line-height: 1.4; }
+
+/* ── Crop Banner (auto-filled from predict page) ─────────────────────────── */
+.crop-banner {
+  background: linear-gradient(135deg, #e8f5ee, #d0ead9);
+  border: 1.5px solid #a8d5b8;
+  border-radius: 12px; padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 0;
+}
+.crop-banner-icon { font-size: 2rem; flex-shrink: 0; }
+.crop-banner-info { flex: 1; }
+.crop-banner-info h4 { font-size: 1.05rem; font-weight: 700; color: #1a4a2e; margin: 0 0 2px; }
+.crop-banner-info p  { font-size: .78rem; color: #4a7a5c; margin: 0; }
+.crop-select-wrapper { display: flex; flex-direction: column; gap: 6px; }
+.crop-select-label { font-size: .78rem; font-weight: 600; color: #4a6b52; text-transform: uppercase; letter-spacing: .02em; }
+.crop-select-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.crop-radio { display: none; }
+.crop-radio + label {
+  padding: 8px 16px; border-radius: 8px; border: 1.5px solid #d0ead9;
+  font-size: .86rem; font-weight: 600; color: #4a7a5c;
+  cursor: pointer; transition: all .2s; background: #fafcfa;
+}
+.crop-radio:checked + label {
+  background: #3d7a5c; color: #fff; border-color: #3d7a5c;
+}
+
+/* ── Irrigation toggle ───────────────────────────────────────────────────── */
+.toggle-row { display: flex; gap: 10px; }
+.irr-radio { display: none; }
+.irr-radio + label {
+  flex: 1; text-align: center; padding: 10px; border-radius: 10px;
+  border: 1.5px solid #d8e8dd; cursor: pointer;
+  font-size: .86rem; font-weight: 600; color: #4a7a5c;
+  transition: all .2s; background: #fafcfa;
+}
+.irr-radio:checked + label { background: #3d7a5c; color: #fff; border-color: #3d7a5c; }
+
+/* ── Submit ──────────────────────────────────────────────────────────────── */
+.fert-submit-btn {
+  width: 100%; padding: 15px; background: #3d7a5c; color: #fff;
+  border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: background .2s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.fert-submit-btn:hover { background: #2e5e45; }
+.fert-submit-btn:active { transform: scale(.98); }
+
+/* ── Results Panel ────────────────────────────────────────────────────────── */
+.result-panel {
+  position: sticky; top: 90px;
+}
+.result-empty {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 48px 24px; text-align: center;
+}
+.result-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.result-empty h4 { font-size: 1rem; font-weight: 700; color: #1a2f1e; margin: 0 0 6px; }
+.result-empty p { font-size: .83rem; color: #8a9e8f; line-height: 1.6; }
+
+/* Results loaded state */
+.result-loaded { display: flex; flex-direction: column; gap: 16px; }
+
+.result-header-card {
+  background: linear-gradient(135deg, #1a2f1e, #2a4230);
+  border-radius: 16px; padding: 24px;
+  color: #f5f0e8;
+}
+.result-header-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem; margin: 0 0 4px;
+}
+.result-header-card .sub { font-size: .82rem; color: rgba(245,240,232,.55); margin-bottom: 16px; }
+
+.npk-totals {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px;
+}
+.npk-box {
+  background: rgba(255,255,255,.08); border-radius: 10px; padding: 12px 8px; text-align: center;
+}
+.npk-box .val { font-size: 1.4rem; font-weight: 800; }
+.npk-box .val.n-col { color: #74c69d; }
+.npk-box .val.p-col { color: #f4a261; }
+.npk-box .val.k-col { color: #e9c46a; }
+.npk-box .lbl { font-size: .72rem; color: rgba(245,240,232,.6); margin-top: 2px; }
+
+/* Special treatments */
+.treatment-banner {
+  border-radius: 12px; overflow: hidden;
+}
+.treatment-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,.05);
+  background: #fff; font-size: .84rem;
+}
+.treatment-row:last-child { border-bottom: none; }
+.treatment-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.treatment-dot.active  { background: #e63946; }
+.treatment-dot.passive { background: #d0d8d3; }
+.treatment-name { font-weight: 600; color: #1a2f1e; flex: 1; }
+.treatment-badge {
+  font-size: .72rem; border-radius: 20px; padding: 3px 10px; font-weight: 600;
+}
+.treatment-badge.needed { background: #fde8e8; color: #c1121f; }
+.treatment-badge.not-needed { background: #e8f5ee; color: #3d7a5c; }
+
+/* Stage timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item {
+  background: #fff; border-radius: 0; overflow: hidden;
+  border-bottom: 1px solid #f0ece4;
+}
+.timeline-item:first-child { border-radius: 16px 16px 0 0; }
+.timeline-item:last-child  { border-radius: 0 0 16px 16px; border-bottom: none; }
+.timeline-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; cursor: pointer;
+  background: #fafcfa; user-select: none;
+}
+.timeline-header:hover { background: #f2f7f4; }
+.stage-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #3d7a5c; color: #fff;
+  display: grid; place-items: center; font-size: .72rem; font-weight: 700; flex-shrink: 0;
+}
+.stage-title { font-weight: 700; color: #1a2f1e; font-size: .9rem; flex: 1; }
+.stage-timing { font-size: .75rem; color: #8a9e8f; }
+.stage-chevron { font-size: .8rem; color: #9aaf9e; transition: transform .2s; }
+.timeline-item.open .stage-chevron { transform: rotate(180deg); }
+
+.timeline-body { display: none; padding: 14px 18px 18px; background: #fff; }
+.timeline-item.open .timeline-body { display: block; }
+
+/* NPK dose row inside stage */
+.stage-npk {
+  display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.stage-npk-chip {
+  padding: 4px 12px; border-radius: 8px; font-size: .8rem; font-weight: 700;
+}
+.stage-npk-chip.n { background: #e8f5ee; color: #2d6a4f; }
+.stage-npk-chip.p { background: #fff3e8; color: #b85c0f; }
+.stage-npk-chip.k { background: #fffbe8; color: #a07d00; }
+.stage-npk-chip.zero { background: #f0f0f0; color: #bbb; }
+
+/* Chemical / Natural tabs */
+.dose-tabs { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid #d8e8dd; margin-bottom: 10px; }
+.dose-tab-btn {
+  flex: 1; padding: 7px; font-size: .8rem; font-weight: 600;
+  border: none; cursor: pointer; background: #fafcfa; color: #6a8a72; transition: all .2s;
+}
+.dose-tab-btn.active { background: #3d7a5c; color: #fff; }
+.dose-content { display: none; font-size: .83rem; color: #1a2f1e; line-height: 1.6; }
+.dose-content.active { display: block; }
+
+/* Special notes */
+.special-note {
+  margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+  font-size: .78rem; line-height: 1.5;
+  background: #fff8e8; border-left: 3px solid #f4a261; color: #7a5c0f;
+}
+
+/* Loading state */
+.loading-spinner {
+  display: none; text-align: center; padding: 40px;
+}
+.spinner-ring {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid #e8f5ee;
+  border-top-color: #3d7a5c;
+  animation: spin .8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error state */
+.error-card {
+  background: #fde8e8; border: 1.5px solid #e63946;
+  border-radius: 12px; padding: 16px 20px;
+  font-size: .86rem; color: #c1121f; display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="fert-hero">
+  <div class="fert-hero-inner">
+    <div class="fert-hero-badge">🌱 Fertilizer Advisor · ICAR Dose Guidelines</div>
+    <h1>Smart <em>Fertilizer</em><br />Schedule for Your Crop</h1>
+    <p>
+      Enter your crop, soil readings, and farm details — get an ML-computed
+      NPK dose with a stage-wise application timeline, chemical and organic alternatives.
+    </p>
+    <div class="fert-hero-meta">
+      <div class="fert-meta-pill">NPK R² <strong>&gt;0.95</strong></div>
+      <div class="fert-meta-pill">Flag accuracy <strong>100%</strong></div>
+      <div class="fert-meta-pill">4 crops · <strong>2–4 stages</strong></div>
+      <div class="fert-meta-pill">ICAR-validated doses</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main layout -->
+<div class="fert-layout">
+
+  <!-- ── LEFT: Input form ─────────────────────────────────────────────────── -->
+  <div class="fert-form-col">
+
+    <!-- Step 1: Crop -->
+    <div class="fert-card">
+      <div class="fert-card-header">
+        <div class="fert-step-badge">1</div>
+        <h3>🌾 Select Your Recommended Crop</h3>
+      </div>
+      <div class="fert-card-body">
+        <div class="source-note">
+          If you just used the <strong>Crop Prediction</strong> page, your crop is pre-filled below.
+        </div>
+        <div class="crop-select-row">
+          <input type="radio" class="crop-radio" name="crop_sel" id="c_rice"      value="Rice">
+          <label for="c_rice">🌾 Rice</label>
+          <input type="radio" class="crop-radio" name="crop_sel" id="c_wheat"     value="Wheat" checked>
+          <label for="c_wheat">🌾 Wheat</label>
+          <input type="radio" class="crop-radio" name="crop_sel" id="c_maize"     value="Maize">
+          <label for="c_maize">🌽 Maize</label>
+          <input type="radio" class="crop-radio" name="crop_sel" id="c_sugarcane" value="Sugarcane">
+          <label for="c_sugarcane">🎋 Sugarcane</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Zone + Season (auto from GPS/date – same as crop predictor) -->
+    <div class="fert-card">
+      <div class="fert-card-header">
+        <div class="fert-step-badge">2</div>
+        <h3>📍 Location &amp; Season</h3>
+      </div>
+      <div class="fert-card-body">
+        <div class="source-note">
+          Auto-detected from GPS / device date. Adjust manually if needed.
+        </div>
+        <div class="form-row-2">
+          <div class="field">
+            <label for="f_zone">ICAR Zone (1–15)</label>
+            <select id="f_zone">
+              <option value="1">Zone 1 — W. Himalayan (HP, UK)</option>
+              <option value="2">Zone 2 — E. Himalayan (Assam, NE)</option>
+              <option value="3">Zone 3 — Lower Gangetic (WB)</option>
+              <option value="4">Zone 4 — Middle Gangetic (Bihar)</option>
+              <option value="5">Zone 5 — Upper Gangetic (W UP)</option>
+              <option value="6" selected>Zone 6 — Trans-Gangetic (Punjab)</option>
+              <option value="7">Zone 7 — E. Plateau (Jharkhand)</option>
+              <option value="8">Zone 8 — Central Plateau (MP)</option>
+              <option value="9">Zone 9 — W. Plateau (Maharashtra)</option>
+              <option value="10">Zone 10 — S. Plateau (Karnataka)</option>
+              <option value="11">Zone 11 — East Coast (AP, TN)</option>
+              <option value="12">Zone 12 — West Coast (Kerala)</option>
+              <option value="13">Zone 13 — Gujarat</option>
+              <option value="14">Zone 14 — W. Dry (Rajasthan)</option>
+              <option value="15">Zone 15 — Islands (A&amp;N)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f_season">Current Season</label>
+            <select id="f_season">
+              <option value="0">Kharif (Jun–Oct)</option>
+              <option value="1" selected>Rabi (Nov–Mar)</option>
+              <option value="2">Zaid (Apr–Jun)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Soil Parameters (same values user entered in crop predictor) -->
+    <div class="fert-card">
+      <div class="fert-card-header">
+        <div class="fert-step-badge">3</div>
+        <h3>🧪 Soil Parameters</h3>
+      </div>
+      <div class="fert-card-body">
+        <div class="source-note">
+          Use the same values you entered in the crop prediction form.
+        </div>
+        <div class="form-row-2">
+          <div class="field">
+            <label for="f_n">Nitrogen (N) <span class="unit">kg/ha</span></label>
+            <input type="number" id="f_n" value="195" min="80" max="460" step="1">
+            <span class="hint">Low 80 · Normal 150–250 · High 460</span>
+          </div>
+          <div class="field">
+            <label for="f_p">Phosphorus (P) <span class="unit">kg/ha</span></label>
+            <input type="number" id="f_p" value="28" min="6" max="48" step="0.5">
+            <span class="hint">Low 6 · Normal 15–35 · High 48</span>
+          </div>
+          <div class="field">
+            <label for="f_k">Potassium (K) <span class="unit">kg/ha</span></label>
+            <input type="number" id="f_k" value="185" min="80" max="380" step="1">
+            <span class="hint">Low 80 · Normal 150–250 · High 380</span>
+          </div>
+          <div class="field">
+            <label for="f_ph">Soil pH</label>
+            <input type="number" id="f_ph" value="7.2" min="4.5" max="9.2" step="0.1">
+            <span class="hint">4.5 acidic · 7.0 neutral · 9.2 alkaline</span>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <label style="font-size:.78rem;font-weight:600;color:#4a6b52;text-transform:uppercase;letter-spacing:.02em;display:block;margin-bottom:8px;">
+            Irrigation Access
+          </label>
+          <div class="toggle-row">
+            <input type="radio" class="irr-radio" name="f_irr" id="irr_yes" value="1" checked>
+            <label for="irr_yes">✅ Yes — Canal / Tubewell / Drip</label>
+            <input type="radio" class="irr-radio" name="f_irr" id="irr_no" value="0">
+            <label for="irr_no">🌧 No — Rainfed only</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Farm Details -->
+    <div class="fert-card">
+      <div class="fert-card-header">
+        <div class="fert-step-badge">4</div>
+        <h3>🚜 Farm Details</h3>
+      </div>
+      <div class="fert-card-body">
+        <div class="form-row-2">
+          <div class="field">
+            <label for="f_variety">Crop Variety</label>
+            <select id="f_variety">
+              <option value="HYV" selected>HYV — High Yielding Variety</option>
+              <option value="Traditional">Traditional / Desi Variety</option>
+            </select>
+            <span class="hint">HYV needs ~2× more fertilizer</span>
+          </div>
+          <div class="field">
+            <label for="f_farm_size">Farm Size <span class="unit">hectares</span></label>
+            <input type="number" id="f_farm_size" value="2.0" min="0.1" max="50" step="0.1">
+            <span class="hint">1 ha = 2.47 acres = 10,000 sq m</span>
+          </div>
+          <div class="field">
+            <label for="f_organic">Organic Input Available</label>
+            <select id="f_organic">
+              <option value="None" selected>None — chemical only</option>
+              <option value="FYM_5t">FYM — 5 tonnes/ha</option>
+              <option value="FYM_10t">FYM — 10 tonnes/ha</option>
+              <option value="Vermicompost">Vermicompost</option>
+              <option value="GreenManure">Green manure grown</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f_prev_crop">Previous Season Crop</label>
+            <select id="f_prev_crop">
+              <option value="Cereal" selected>Cereal (Rice / Wheat / Maize)</option>
+              <option value="Legume">Legume (Dal / Soybean) −25 kg N</option>
+              <option value="Fallow">Left fallow</option>
+              <option value="Vegetable">Vegetables</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="fert-submit-btn" id="fertSubmit" onclick="runFertilizer()">
+      🧮 Calculate Fertilizer Schedule
+    </button>
+
+    <!-- Error -->
+    <div class="error-card" id="fertError"></div>
+
+  </div><!-- /left col -->
+
+  <!-- ── RIGHT: Results panel ─────────────────────────────────────────────── -->
+  <div class="result-panel" id="resultPanel">
+
+    <!-- Empty state -->
+    <div class="result-empty" id="resultEmpty">
+      <div class="result-empty-icon">🌱</div>
+      <h4>Your fertilizer schedule will appear here</h4>
+      <p>
+        Fill in your crop, soil readings, and farm details on the left,
+        then click <strong>Calculate Fertilizer Schedule</strong>.
+      </p>
+      <p style="margin-top:12px;font-size:.75rem;color:#b0bfb5;">
+        NPK Regressor R²&gt;0.95 · Flag Classifier 100% accuracy<br>
+        Stage fractions from ICAR Crop Production Guides
+      </p>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-spinner" id="fertLoading">
+      <div class="spinner-ring"></div>
+      <p style="font-size:.86rem;color:#6a8a72;margin:0">Calculating dose…</p>
+    </div>
+
+    <!-- Loaded results (built by JS) -->
+    <div class="result-loaded" id="resultLoaded" style="display:none"></div>
+
+  </div><!-- /right col -->
+
+</div><!-- /layout -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Season auto-detect (same logic as predict page) ─────────────────────── */
+(function() {
+  const m = new Date().getMonth() + 1; // 1-12
+  let season = 1; // default Rabi
+  if      (m >= 6 && m <= 10) season = 0; // Kharif
+  else if (m >= 4 && m <= 5)  season = 2; // Zaid
+  document.getElementById('f_season').value = season.toString();
+})();
+
+/* ── Pre-fill crop from sessionStorage if coming from predict page ─────────── */
+(function() {
+  const saved = sessionStorage.getItem('bhoomi_predicted_crop');
+  if (saved) {
+    const radio = document.querySelector(`input[name="crop_sel"][value="${saved}"]`);
+    if (radio) radio.checked = true;
+  }
+  const savedZone = sessionStorage.getItem('bhoomi_zone_id');
+  if (savedZone) {
+    const sel = document.getElementById('f_zone');
+    if (sel) sel.value = savedZone;
+  }
+})();
+
+/* ── Tab switcher ─────────────────────────────────────────────────────────── */
+function switchTab(stageIdx, tab) {
+  const chemical = document.getElementById(`chem_${stageIdx}`);
+  const natural  = document.getElementById(`nat_${stageIdx}`);
+  const btnChem  = document.getElementById(`btn_chem_${stageIdx}`);
+  const btnNat   = document.getElementById(`btn_nat_${stageIdx}`);
+  if (!chemical) return;
+  if (tab === 'chem') {
+    chemical.classList.add('active');  natural.classList.remove('active');
+    btnChem.classList.add('active');   btnNat.classList.remove('active');
+  } else {
+    natural.classList.add('active');   chemical.classList.remove('active');
+    btnNat.classList.add('active');    btnChem.classList.remove('active');
+  }
+}
+
+function toggleStage(idx) {
+  const item = document.getElementById(`stage_${idx}`);
+  if (item) item.classList.toggle('open');
+}
+
+/* ── Collect form values ─────────────────────────────────────────────────── */
+function getFormData() {
+  const crop = document.querySelector('input[name="crop_sel"]:checked')?.value || 'Wheat';
+  const irr  = document.querySelector('input[name="f_irr"]:checked')?.value  || '1';
+  return {
+    crop:       crop,
+    zone_id:    parseInt(document.getElementById('f_zone').value),
+    season:     parseInt(document.getElementById('f_season').value),
+    n_soil:     parseFloat(document.getElementById('f_n').value),
+    p_soil:     parseFloat(document.getElementById('f_p').value),
+    k_soil:     parseFloat(document.getElementById('f_k').value),
+    ph:         parseFloat(document.getElementById('f_ph').value),
+    irrigation: parseInt(irr),
+    variety:    document.getElementById('f_variety').value,
+    organic:    document.getElementById('f_organic').value,
+    prev_crop:  document.getElementById('f_prev_crop').value,
+    farm_size:  parseFloat(document.getElementById('f_farm_size').value),
+  };
+}
+
+/* ── Validate ─────────────────────────────────────────────────────────────── */
+function validate(d) {
+  if (d.n_soil < 80  || d.n_soil > 460)  return 'Nitrogen must be 80–460 kg/ha';
+  if (d.p_soil < 6   || d.p_soil > 48)   return 'Phosphorus must be 6–48 kg/ha';
+  if (d.k_soil < 80  || d.k_soil > 380)  return 'Potassium must be 80–380 kg/ha';
+  if (d.ph < 4.5     || d.ph > 9.2)      return 'pH must be 4.5–9.2';
+  if (d.farm_size < 0.1 || d.farm_size > 50) return 'Farm size must be 0.1–50 ha';
+  return null;
+}
+
+/* ── Render results ──────────────────────────────────────────────────────── */
+function renderResult(r) {
+  const cropIcons = { Rice:'🌾', Wheat:'🌾', Maize:'🌽', Sugarcane:'🎋' };
+  const icon = cropIcons[r.crop] || '🌱';
+  const n = r.npk_total, pha = r.npk_per_ha;
+  const tr = r.special_treatments;
+
+  let treatHtml = '';
+  [
+    { key:'Needs_Lime',   label:'Lime treatment',   note:'Apply Agricultural Lime 2–4 t/ha, 3 weeks before sowing' },
+    { key:'Needs_Gypsum', label:'Gypsum treatment', note:'Apply Gypsum 500 kg/ha before fertilizer' },
+    { key:'Needs_Zinc',   label:'Zinc (ZnSO₄)',     note:'Apply ZnSO₄ 25 kg/ha at basal stage' },
+  ].forEach(t => {
+    const active = tr[t.key];
+    treatHtml += `
+      <div class="treatment-row">
+        <div class="treatment-dot ${active ? 'active' : 'passive'}"></div>
+        <span class="treatment-name">${t.label}</span>
+        ${active
+          ? `<span class="treatment-badge needed">Required</span>`
+          : `<span class="treatment-badge not-needed">Not needed</span>`}
+      </div>
+      ${active ? `<div style="padding:6px 16px 10px;background:#fff;font-size:.76rem;color:#8a4a00;border-bottom:1px solid #f0ece4;">⚠ ${t.note}</div>` : ''}
+    `;
+  });
+
+  let stagesHtml = '';
+  (r.stage_schedule || []).forEach((s, i) => {
+    const chips = [
+      s.N_kg_ha > 0 ? `<span class="stage-npk-chip n">N ${s.N_total}kg total (${s.N_kg_ha}/ha)</span>` : `<span class="stage-npk-chip zero">N —</span>`,
+      s.P_kg_ha > 0 ? `<span class="stage-npk-chip p">P ${s.P_total}kg total (${s.P_kg_ha}/ha)</span>` : `<span class="stage-npk-chip zero">P —</span>`,
+      s.K_kg_ha > 0 ? `<span class="stage-npk-chip k">K ${s.K_total}kg total (${s.K_kg_ha}/ha)</span>` : `<span class="stage-npk-chip zero">K —</span>`,
+    ].join('');
+    const specialHtml = (s.special_notes || []).map(n => `<div class="special-note">⚠ ${n}</div>`).join('');
+    stagesHtml += `
+      <div class="timeline-item" id="stage_${i}">
+        <div class="timeline-header" onclick="toggleStage(${i})">
+          <div class="stage-num">${i+1}</div>
+          <span class="stage-title">${s.stage}</span>
+          <span class="stage-timing">${s.timing}</span>
+          <span class="stage-chevron">▼</span>
+        </div>
+        <div class="timeline-body">
+          <div class="stage-npk">${chips}</div>
+          <div class="dose-tabs">
+            <button class="dose-tab-btn active" id="btn_chem_${i}" onclick="switchTab(${i},'chem')">🧪 Chemical</button>
+            <button class="dose-tab-btn"        id="btn_nat_${i}"  onclick="switchTab(${i},'nat')">🌿 Natural / Organic</button>
+          </div>
+          <div class="dose-content active" id="chem_${i}">${s.chemical || '—'}</div>
+          <div class="dose-content"        id="nat_${i}">${s.natural  || '—'}</div>
+          ${specialHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('resultLoaded').innerHTML = `
+    <div class="result-header-card">
+      <h3>${icon} ${r.crop} · ${r.farm_size_ha} ha</h3>
+      <div class="sub">Recommended NPK — total for your entire farm</div>
+      <div class="npk-totals">
+        <div class="npk-box">
+          <div class="val n-col">${n.N}<small style="font-size:.6em;font-weight:500"> kg</small></div>
+          <div class="lbl">Nitrogen (N)<br><span style="font-size:.85em;opacity:.7">${pha.N} kg/ha</span></div>
+        </div>
+        <div class="npk-box">
+          <div class="val p-col">${n.P}<small style="font-size:.6em;font-weight:500"> kg</small></div>
+          <div class="lbl">Phosphorus (P)<br><span style="font-size:.85em;opacity:.7">${pha.P} kg/ha</span></div>
+        </div>
+        <div class="npk-box">
+          <div class="val k-col">${n.K}<small style="font-size:.6em;font-weight:500"> kg</small></div>
+          <div class="lbl">Potassium (K)<br><span style="font-size:.85em;opacity:.7">${pha.K} kg/ha</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:.78rem;font-weight:700;color:#4a6b52;text-transform:uppercase;letter-spacing:.06em;padding:0 2px;">
+      🔬 Soil Treatment Flags
+    </div>
+    <div class="treatment-banner">${treatHtml}</div>
+
+    <div style="font-size:.78rem;font-weight:700;color:#4a6b52;text-transform:uppercase;letter-spacing:.06em;padding:0 2px;">
+      📅 Application Schedule
+    </div>
+    <div class="timeline">${stagesHtml}</div>
+
+    <div style="font-size:.72rem;color:#9aaf9e;padding:4px 2px;line-height:1.6">
+      Doses computed by RandomForest model (N R²=${(r.model_metrics && r.model_metrics.N_R2 ? r.model_metrics.N_R2.toFixed(3) : '0.955')}).
+      Stage fractions from ICAR Crop Production Guidelines.
+      Natural alternatives <em>replace</em> chemical — do not use both.
+    </div>
+  `;
+
+  // Auto-open first stage
+  const first = document.getElementById('stage_0');
+  if (first) first.classList.add('open');
+}
+
+/* ── Main API call ─────────────────────────────────────────────────────────── */
+async function runFertilizer() {
+  const errEl   = document.getElementById('fertError');
+  const loadEl  = document.getElementById('fertLoading');
+  const emptyEl = document.getElementById('resultEmpty');
+  const loadedEl= document.getElementById('resultLoaded');
+  const btn     = document.getElementById('fertSubmit');
+
+  errEl.style.display = 'none';
+  const data = getFormData();
+  const err  = validate(data);
+  if (err) { errEl.textContent = `⚠ ${err}`; errEl.style.display = 'block'; return; }
+
+  // Show loading
+  emptyEl.style.display  = 'none';
+  loadedEl.style.display = 'none';
+  loadEl.style.display   = 'block';
+  btn.disabled = true; btn.textContent = '⏳ Calculating…';
+
+  try {
+    const resp = await fetch('/api/fertilizer/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await resp.json();
+    if (!resp.ok || result.error) {
+      throw new Error(result.error || 'Server error. Please try again.');
+    }
+    renderResult(result);
+    loadEl.style.display   = 'none';
+    loadedEl.style.display = 'flex';
+  } catch (e) {
+    loadEl.style.display   = 'none';
+    emptyEl.style.display  = 'block';
+    errEl.textContent = `⚠ ${e.message}`;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '🧮 Calculate Fertilizer Schedule';
+  }
+}
+</script>
+{% endblock %}

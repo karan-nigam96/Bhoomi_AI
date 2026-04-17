@@ -1,0 +1,305 @@
+{
+  "features": [
+    "Crop_enc",
+    "Zone_ID",
+    "Season",
+    "Nitrogen_soil",
+    "Phosphorus_soil",
+    "Potassium_soil",
+    "pH",
+    "Irrigation",
+    "Variety_enc",
+    "Organic_enc",
+    "PrevCrop_enc",
+    "Farm_Size_ha"
+  ],
+  "reg_targets": [
+    "N_recommended",
+    "P_recommended",
+    "K_recommended"
+  ],
+  "flag_targets": [
+    "Needs_Lime",
+    "Needs_Gypsum",
+    "Needs_Zinc"
+  ],
+  "encodings": {
+    "Crop": [
+      "Maize",
+      "Rice",
+      "Sugarcane",
+      "Wheat"
+    ],
+    "Variety": [
+      "HYV",
+      "Traditional"
+    ],
+    "Organic_Input": [
+      "FYM_10t",
+      "FYM_5t",
+      "GreenManure",
+      "Vermicompost",
+      NaN
+    ],
+    "Prev_Crop": [
+      "Cereal",
+      "Fallow",
+      "Legume",
+      "Vegetable"
+    ]
+  },
+  "model_metrics": {
+    "N_MAE_kg_per_ha": 6.64,
+    "N_R2": 0.9551,
+    "P_MAE_kg_per_ha": 3.06,
+    "K_MAE_kg_per_ha": 2.47
+  },
+  "scaler_params": {
+    "Crop_enc": {
+      "min": 0.0,
+      "max": 3.0
+    },
+    "Zone_ID": {
+      "min": 1.0,
+      "max": 14.0
+    },
+    "Season": {
+      "min": 0.0,
+      "max": 2.0
+    },
+    "Nitrogen_soil": {
+      "min": 95.2,
+      "max": 424.4
+    },
+    "Phosphorus_soil": {
+      "min": 7.8,
+      "max": 43.3
+    },
+    "Potassium_soil": {
+      "min": 95.9,
+      "max": 344.7
+    },
+    "pH": {
+      "min": 4.81,
+      "max": 8.8
+    },
+    "Irrigation": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "Variety_enc": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "Organic_enc": {
+      "min": 0.0,
+      "max": 4.0
+    },
+    "PrevCrop_enc": {
+      "min": 0.0,
+      "max": 3.0
+    },
+    "Farm_Size_ha": {
+      "min": 0.5,
+      "max": 5.0
+    }
+  },
+  "icar_base_doses_kg_per_ha": {
+    "Rice_HYV_irrigated": {
+      "N": 100,
+      "P": 50,
+      "K": 50
+    },
+    "Rice_HYV_rainfed": {
+      "N": 60,
+      "P": 30,
+      "K": 30
+    },
+    "Wheat_HYV_irrigated": {
+      "N": 120,
+      "P": 60,
+      "K": 40
+    },
+    "Wheat_HYV_rainfed": {
+      "N": 80,
+      "P": 40,
+      "K": 20
+    },
+    "Maize_HYV_irrigated": {
+      "N": 150,
+      "P": 75,
+      "K": 50
+    },
+    "Maize_HYV_rainfed": {
+      "N": 100,
+      "P": 50,
+      "K": 30
+    },
+    "Sugarcane_HYV_irrigated": {
+      "N": 250,
+      "P": 100,
+      "K": 120
+    },
+    "Sugarcane_HYV_rainfed": {
+      "N": 200,
+      "P": 80,
+      "K": 100
+    }
+  },
+  "stage_schedule": {
+    "Rice": [
+      {
+        "stage": "Basal",
+        "day_from_sowing": 0,
+        "N_fraction": 0.5,
+        "P_fraction": 1.0,
+        "K_fraction": 0.5,
+        "chemical_fertilizer": "DAP 108kg/ha + MOP 42kg/ha + Urea 55kg/ha",
+        "natural_alternative": "FYM 10t/ha + Rock phosphate 200kg/ha"
+      },
+      {
+        "stage": "Top dress 1",
+        "day_from_sowing": "25-30",
+        "N_fraction": 0.25,
+        "P_fraction": 0,
+        "K_fraction": 0.5,
+        "chemical_fertilizer": "Urea 54kg/ha + MOP 42kg/ha",
+        "natural_alternative": "Azolla 250kg/ha in standing water"
+      },
+      {
+        "stage": "Top dress 2",
+        "day_from_sowing": "50-55",
+        "N_fraction": 0.25,
+        "P_fraction": 0,
+        "K_fraction": 0,
+        "chemical_fertilizer": "Urea 54kg/ha",
+        "natural_alternative": "Jeevamrut foliar spray 500L/ha"
+      }
+    ],
+    "Wheat": [
+      {
+        "stage": "Basal",
+        "day_from_sowing": 0,
+        "N_fraction": 0.5,
+        "P_fraction": 1.0,
+        "K_fraction": 1.0,
+        "chemical_fertilizer": "DAP 130kg/ha + MOP 67kg/ha + Urea 52kg/ha",
+        "natural_alternative": "FYM 15t/ha + Neem cake 500kg/ha"
+      },
+      {
+        "stage": "Top dress 1",
+        "day_from_sowing": "21-25",
+        "N_fraction": 0.33,
+        "P_fraction": 0,
+        "K_fraction": 0,
+        "chemical_fertilizer": "Urea 87kg/ha",
+        "natural_alternative": "Vermicompost 5t/ha before irrigation"
+      },
+      {
+        "stage": "Top dress 2",
+        "day_from_sowing": "40-45",
+        "N_fraction": 0.17,
+        "P_fraction": 0,
+        "K_fraction": 0,
+        "chemical_fertilizer": "Urea 43kg/ha",
+        "natural_alternative": "Azospirillum liquid 2L/ha"
+      }
+    ],
+    "Maize": [
+      {
+        "stage": "Basal",
+        "day_from_sowing": 0,
+        "N_fraction": 0.33,
+        "P_fraction": 1.0,
+        "K_fraction": 1.0,
+        "chemical_fertilizer": "DAP 163kg/ha + MOP 83kg/ha + Urea 43kg/ha + ZnSO4 25kg/ha",
+        "natural_alternative": "FYM 6t/ha + Rock phosphate 300kg/ha + Azospirillum seed treatment"
+      },
+      {
+        "stage": "Top dress 1",
+        "day_from_sowing": "25-30",
+        "N_fraction": 0.33,
+        "P_fraction": 0,
+        "K_fraction": 0,
+        "chemical_fertilizer": "Urea 108kg/ha",
+        "natural_alternative": "Azotobacter 2L/ha soil drench"
+      },
+      {
+        "stage": "Top dress 2",
+        "day_from_sowing": "45-50",
+        "N_fraction": 0.34,
+        "P_fraction": 0,
+        "K_fraction": 0,
+        "chemical_fertilizer": "Urea 108kg/ha",
+        "natural_alternative": "Vermicompost liquid 500L/ha foliar"
+      }
+    ],
+    "Sugarcane": [
+      {
+        "stage": "Basal",
+        "day_from_sowing": 0,
+        "N_fraction": 0.3,
+        "P_fraction": 1.0,
+        "K_fraction": 0.5,
+        "chemical_fertilizer": "DAP 217kg/ha + MOP 100kg/ha + Urea 97kg/ha",
+        "natural_alternative": "FYM 25t/ha + Pressmud cake 10t/ha"
+      },
+      {
+        "stage": "Top dress 1",
+        "day_from_sowing": "30-45",
+        "N_fraction": 0.25,
+        "P_fraction": 0,
+        "K_fraction": 0.25,
+        "chemical_fertilizer": "Urea 135kg/ha + MOP 50kg/ha",
+        "natural_alternative": "Azotobacter+PSB 5kg/ha soil application"
+      },
+      {
+        "stage": "Top dress 2",
+        "day_from_sowing": "90-120",
+        "N_fraction": 0.3,
+        "P_fraction": 0,
+        "K_fraction": 0.25,
+        "chemical_fertilizer": "Urea 163kg/ha + MOP 50kg/ha",
+        "natural_alternative": "Vermicompost 5t/ha + Jeevamrut 500L/ha"
+      },
+      {
+        "stage": "Top dress 3",
+        "day_from_sowing": "150-180",
+        "N_fraction": 0.15,
+        "P_fraction": 0,
+        "K_fraction": 0,
+        "chemical_fertilizer": "Urea 82kg/ha",
+        "natural_alternative": "Panchagavya foliar 3% solution"
+      }
+    ]
+  },
+  "natural_alternatives": {
+    "FYM_10t": {
+      "N_credit_kg_ha": 50,
+      "P_credit_kg_ha": 25,
+      "K_credit_kg_ha": 60
+    },
+    "Vermicompost": {
+      "N_credit_kg_ha": 40,
+      "P_credit_kg_ha": 20,
+      "K_credit_kg_ha": 45
+    },
+    "GreenManure": {
+      "N_credit_kg_ha": 60,
+      "P_credit_kg_ha": 10,
+      "K_credit_kg_ha": 20
+    },
+    "Azolla": {
+      "N_credit_kg_ha": 30,
+      "note": "Rice only \u2014 flooded field"
+    },
+    "Azospirillum": {
+      "N_credit_kg_ha": 25,
+      "application": "seed treatment or 2L/ha"
+    },
+    "PSB": {
+      "P_credit_kg_ha": 15,
+      "note": "Mobilizes existing soil P"
+    }
+  }
+}

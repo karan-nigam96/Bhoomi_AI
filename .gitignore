@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+.env
+uploads/*
+!uploads/.gitkeep
+results/accuracy_report.txt
+.vscode/
+.idea/
+*.log
